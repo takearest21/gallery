@@ -14,41 +14,38 @@ const App = () => {
   const imagesPerPage = 6;
   const carouselOverlayRef = useRef(null);
   
-  // Function to generate placeholder images
-  const generatePlaceholderImage = (id) => {
-    const colors = [
-      '#5D8CAE', '#4A6B8A', '#2C3E50', '#7AA5D2', '#253746',
-      '#3D5A80', '#98C1D9', '#293241', '#6497B1', '#025E73'
-    ];
-    const color = colors[id % colors.length];
-    const secondaryColor = colors[(id + 3) % colors.length];
+  // Dynamically import all images from the images folder using webpack's require.context
+  const importAllImages = () => {
+    // This function creates a context of all image files in the images directory
+    const r = require.context('./images', false, /\.(jpe?g|png|gif)$/i);
     
-    // Create SVG with sample patterns
-    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='${color.replace('#', '%23')}'/%3E%3Ccircle cx='${150 + (id * 20) % 100}' cy='${100 + (id * 15) % 100}' r='${30 + id % 20}' fill='${secondaryColor.replace('#', '%23')}' opacity='0.7'/%3E%3Cpath d='M ${50 + (id * 10) % 100} ${200 + (id * 5) % 50} L ${300 + (id * 7) % 50} ${100 + (id * 12) % 150} Z' fill='${secondaryColor.replace('#', '%23')}' opacity='0.5'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='24' text-anchor='middle' fill='white'%3EImage ${id + 1}%3C/text%3E%3C/svg%3E`;
-  };
-  
-  // Generate image data
-  const generateImageData = (count, startId = 0) => {
-    return Array.from({ length: count }, (_, index) => {
-      const id = startId + index;
-      return {
-        id,
-        title: `Image ${id + 1}`,
-        description: `Description for image ${id + 1}`,
-        url: generatePlaceholderImage(id),
-        alt: `Image ${id + 1}`
-      };
-    });
+    // Map over all the keys (file paths) and create an array of image objects
+    return r.keys().map((fileName, index) => ({
+      id: index,
+      url: r(fileName),
+      alt: `Image ${index + 1}`,
+      title: fileName.replace(/^\.\//, '').replace(/\.(jpe?g|png|gif)$/i, '')
+    }));
   };
   
   // Load initial images
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setImages(generateImageData(imagesPerPage));
+    try {
+      // Get all images from the folder
+      const allImages = importAllImages();
+      
+      // Simulate API call delay
+      const timer = setTimeout(() => {
+        // Load first batch of images
+        setImages(allImages.slice(0, imagesPerPage));
+        setLoading(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    } catch (error) {
+      console.error("Error loading images:", error);
       setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    }
   }, []);
   
   // Handle image click to show carousel
@@ -68,16 +65,39 @@ const App = () => {
   const handleLoadMore = () => {
     setLoadingMore(true);
     
-    // Simulate API call to load more images
-    setTimeout(() => {
-      const nextPage = page + 1;
-      const startId = images.length;
-      const newImages = generateImageData(imagesPerPage, startId);
+    try {
+      const allImages = importAllImages();
       
-      setImages([...images, ...newImages]);
-      setPage(nextPage);
+      // Simulate API call to load more images
+      setTimeout(() => {
+        const nextPage = page + 1;
+        const startIndex = images.length;
+        const endIndex = Math.min(startIndex + imagesPerPage, allImages.length);
+        
+        // Check if there are more images to load
+        if (startIndex < allImages.length) {
+          const newImages = allImages.slice(startIndex, endIndex);
+          setImages([...images, ...newImages]);
+          setPage(nextPage);
+        }
+        
+        setLoadingMore(false);
+      }, 1000);
+    } catch (error) {
+      console.error("Error loading more images:", error);
       setLoadingMore(false);
-    }, 1000);
+    }
+  };
+  
+  // Check if all images are loaded
+  const allImagesLoaded = () => {
+    try {
+      const allImages = importAllImages();
+      return images.length >= allImages.length;
+    } catch (error) {
+      console.error("Error checking loaded images:", error);
+      return true; // Assume all loaded if we can't check
+    }
   };
   
   return (
@@ -93,15 +113,17 @@ const App = () => {
             onImageClick={handleImageClick} 
           />
           
-          <div className="load-more-container">
-            <button 
-              className="load-more-btn"
-              onClick={handleLoadMore}
-              disabled={loadingMore}
-            >
-              {loadingMore ? 'Loading...' : 'Load More'}
-            </button>
-          </div>
+          {!allImagesLoaded() && (
+            <div className="load-more-container">
+              <button 
+                className="load-more-btn"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+              >
+                {loadingMore ? 'Loading...' : 'Load More'}
+              </button>
+            </div>
+          )}
           
           {viewMode === 'carousel' && (
             <div 
