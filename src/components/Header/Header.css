@@ -1,48 +1,25 @@
-.header {
+.instagram-link {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--accent-color);
-  }
-  
-  .header h1 {
-    color: var(--primary-color);
-    font-size: 1.8rem;
-  }
-  
-  .view-toggle {
-    display: flex;
     gap: 0.5rem;
-  }
-  
-  .btn {
-    padding: 0.5rem 1rem;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: all var(--transition-speed);
+    padding: 0.5rem;
     border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: background-color var(--transition-speed);
   }
   
-  .btn:hover {
-    background-color: var(--accent-color);
+  .instagram-link:hover {
+    color: var(--primary-color);
+    transform: translateY(-2px);
   }
   
-  .btn.active {
-    background-color: var(--secondary-color);
+  .instagram-icon {
+    width: 24px;
+    height: 24px;
   }
   
-  @media (max-width: 768px) {
-    .header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-    
-    .header h1 {
-      font-size: 1.5rem;
-    }
+  .instagram-name {
+    font-weight: 500;
+    font-size: 1rem;
   }
