@@ -26,12 +26,13 @@ const Carousel = ({ images, activeIndex, setActiveIndex, onBackToGallery }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeIndex, onBackToGallery]);
   
+  // Prevent click events from propagating to the overlay
+  const handleCarouselClick = (e) => {
+    e.stopPropagation();
+  };
+  
   return (
-    <div className="carousel-wrapper">
-      <button className="back-to-gallery-btn" onClick={onBackToGallery}>
-        ← Back to Gallery
-      </button>
-      
+    <div className="carousel-wrapper" onClick={handleCarouselClick}>
       <div className="carousel-container">
         {images.map((image, index) => (
           <div 

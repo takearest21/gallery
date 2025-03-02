@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Gallery from './components/Gallery/Gallery';
 import Carousel from './components/Carousel/Carousel';
@@ -8,10 +8,11 @@ const App = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'carousel'
   const [activeIndex, setActiveIndex] = useState(0);
   const [page, setPage] = useState(1);
   const imagesPerPage = 6;
+  const carouselOverlayRef = useRef(null);
   
   // Function to generate placeholder images
   const generatePlaceholderImage = (id) => {
@@ -56,6 +57,13 @@ const App = () => {
     setViewMode('carousel');
   };
   
+  // Handle click outside carousel to close it
+  const handleOverlayClick = (e) => {
+    if (e.target === carouselOverlayRef.current) {
+      setViewMode('grid');
+    }
+  };
+  
   // Handle load more button click
   const handleLoadMore = () => {
     setLoadingMore(true);
@@ -80,29 +88,34 @@ const App = () => {
         <div className="loading">Loading gallery...</div>
       ) : (
         <>
-          {viewMode === 'grid' ? (
-            <>
-              <Gallery 
+          <Gallery 
+            images={images} 
+            onImageClick={handleImageClick} 
+          />
+          
+          <div className="load-more-container">
+            <button 
+              className="load-more-btn"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? 'Loading...' : 'Load More'}
+            </button>
+          </div>
+          
+          {viewMode === 'carousel' && (
+            <div 
+              className="carousel-overlay" 
+              ref={carouselOverlayRef}
+              onClick={handleOverlayClick}
+            >
+              <Carousel 
                 images={images} 
-                onImageClick={handleImageClick} 
+                activeIndex={activeIndex}
+                setActiveIndex={setActiveIndex}
+                onBackToGallery={() => setViewMode('grid')}
               />
-              <div className="load-more-container">
-                <button 
-                  className="load-more-btn"
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
-                >
-                  {loadingMore ? 'Loading...' : 'Load More'}
-                </button>
-              </div>
-            </>
-          ) : (
-            <Carousel 
-              images={images} 
-              activeIndex={activeIndex}
-              setActiveIndex={setActiveIndex}
-              onBackToGallery={() => setViewMode('grid')}
-            />
+            </div>
           )}
         </>
       )}
